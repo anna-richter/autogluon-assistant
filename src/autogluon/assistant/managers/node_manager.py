@@ -58,6 +58,7 @@ class Node:
     # Solution artifacts
     python_code: str = ""
     bash_script: str = ""
+    bash_script_path: str = ""
     tool_used: str = ""  # The primary tool used for this solution
     tools_available: List[str] = field(
         default_factory=list
@@ -770,6 +771,7 @@ class NodeManager:
         logger.debug(f"  Writing Bash script to: {bash_file_path}")
         with open(bash_file_path, "w") as file:
             file.write(self.current_node.bash_script)
+        self.current_node.bash_script_path = bash_file_path
 
         logger.debug(f"Completed code generation for Node {self.current_node.id}")
 
@@ -812,6 +814,7 @@ class NodeManager:
             code_to_analyze=self.current_node.python_code,
             execution_task=self.task_description,
             execution_data=self.data_prompt,
+            script_path=self.current_node.bash_script_path
         )
 
         # Store execution results

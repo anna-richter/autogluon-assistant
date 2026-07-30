@@ -13,7 +13,7 @@ from .utils import init_llm
 logger = logging.getLogger(__name__)
 
 
-def execute_code(code, language, timeout):
+def execute_code(code, language, timeout, script_path=None):
     """
     Execute code with real-time output streaming and timeout and show a linear timeout progress bar..
     Args:
@@ -33,7 +33,7 @@ def execute_code(code, language, timeout):
         if language.lower() == "python":
             cmd = ["python", "-c", code]
         elif language.lower() == "bash":
-            cmd = ["bash", "-c", code]
+            cmd = ["bash", script_path] if script_path else ["bash", "-c", code]
         else:
             return False, "", f"Unsupported language: {language}. Use 'python' or 'bash'."
 
@@ -171,14 +171,14 @@ class ExecuterAgent(BaseAgent):
             llm_config=self.executer_llm_config, manager=manager, template=self.executer_prompt_template
         )
 
-    def __call__(self, code_to_execute, code_to_analyze=None, execution_task=None, execution_data=None):
+    def __call__(self, code_to_execute, code_to_analyze=None, execution_task=None, execution_data=None, script_path=None):
 
         self.manager.log_agent_start("ExecuterAgent: executing code and collecting stdout/stderr for evaluation.")
 
         if code_to_analyze is None:
             code_to_analyze = code_to_execute
 
-        success, stdout, stderr = execute_code(code=code_to_execute, language=self.language, timeout=self.timeout)
+        success, stdout, stderr = execute_code(code=code_to_execute, language=self.language, timeout=self.timeout, script_path=script_path)
 
         if not self.executer_llm_config.multi_turn:
             self.executer_llm = init_llm(
