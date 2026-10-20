@@ -24,9 +24,11 @@ class AssistantChatOpenAI(ChatOpenAI, BaseAssistantChat):
 
 def get_openai_models() -> List[str]:
     try:
-        client = OpenAI()
+        client = OpenAI()  # honours OPENAI_BASE_URL, e.g. Gemini's OpenAI-compatible endpoint
         models = client.models.list()
-        return [model.id for model in models if model.id.startswith(("gpt-3.5", "gpt-4", "o1", "o3", "gpt-5"))]
+        # Gemini's endpoint may return ids as "models/gemini-..."
+        model_ids = [model.id.removeprefix("models/") for model in models]
+        return [m for m in model_ids if m.startswith(("gpt-3.5", "gpt-4", "o1", "o3", "gpt-5", "gemini"))]
     except Exception as e:
         logger.error(f"Error fetching OpenAI models: {e}")
         return []
@@ -47,7 +49,8 @@ def create_openai_chat(config, session_name: str) -> AssistantChatOpenAI:
         "max_tokens": config.max_tokens,
     }
 
-    if hasattr(config, "temperature"):
+    # Gemini 3.5+ ignores sampling params and future models reject them with a 400
+    if hasattr(config, "temperature") and not model.startswith("gemini"):
         kwargs["temperature"] = config.temperature
 
     if hasattr(config, "verbose"):
