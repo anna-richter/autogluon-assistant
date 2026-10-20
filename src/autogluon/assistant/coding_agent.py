@@ -27,6 +27,8 @@ def run_agent(
     extract_archives_to=None,
     manager=None,
     verbosity=1,
+    model=None,
+    per_execution_timeout=None,
 ):
     """
     Run the AutoGluon Assistant with MCTS-based search strategy.
@@ -43,6 +45,8 @@ def run_agent(
         initial_user_input: Initial user instruction
         extract_archives_to: Path to extract archives to
         verbosity: Verbosity level
+        model: If given, overrides the model of every LLM section in the config
+        per_execution_timeout: If given, overrides the wall-clock limit in seconds for each script run
 
     Returns:
         None
@@ -125,6 +129,13 @@ def run_agent(
         config.enable_meta_prompting = enable_meta_prompting
     if remove_current_iteration_folder is not None:
         config.remove_current_iteration_folder = remove_current_iteration_folder
+    if model is not None:
+        # YAML anchors are resolved at load time, so each agent section holds its own copy of the model
+        for section in config.values():
+            if OmegaConf.is_dict(section) and "provider" in section and "model" in section:
+                section.model = model
+    if per_execution_timeout is not None:
+        config.per_execution_timeout = per_execution_timeout
 
     if manager is None:
         # Create a new NodeManager instance

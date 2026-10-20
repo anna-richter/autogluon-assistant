@@ -45,6 +45,16 @@ def main(
         "--provider",
         help="LLM provider to use (bedrock, openai, anthropic, sagemaker). Overrides config file.",
     ),
+    model: str | None = typer.Option(
+        None,
+        "--model",
+        help="LLM model to use for all agents. Overrides config file.",
+    ),
+    per_execution_timeout: int | None = typer.Option(
+        None,
+        "--per-execution-timeout",
+        help="Wall-clock limit in seconds for each generated script run. Overrides config file.",
+    ),
     max_iterations: int = typer.Option(
         5,
         "-n",
@@ -132,6 +142,8 @@ def main(
         initial_user_input=initial_user_input,
         extract_archives_to=extract_archives_to,
         verbosity=verbosity,
+        model=model,
+        per_execution_timeout=per_execution_timeout,
     )
 
 
